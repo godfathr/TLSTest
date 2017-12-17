@@ -13,7 +13,6 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +23,6 @@ import okhttp3.ConnectionSpec;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.Response;
 import okhttp3.TlsVersion;
 
 //import com.android.volley.Request;
@@ -118,12 +116,9 @@ public class MainActivity extends AppCompatActivity {
 
             pDialog.show();
 
-            try {
-                Response response = _client.newCall(request).execute();
-            } catch (IOException e) {
-                Log.e("Unable to make request", e.getMessage());
-                e.printStackTrace();
-            }
+            WebServiceFactory wsf = new WebServiceFactory();
+            wsf.MakeRequest(_client, request);
+
         }
     }
 
