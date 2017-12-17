@@ -11,9 +11,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.toolbox.JsonObjectRequest;
-
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -43,8 +40,8 @@ public class MainActivity extends AppCompatActivity {
     //String weatherWebserviceURL = "https://192.168.0.16/Timestamp/api/DateTimeRecords";
     //the loading Dialog
     ProgressDialog pDialog;
-    // Textview to show temperature and description
-    TextView temperature, description, tlsversion;
+    // Textview to show data
+    TextView tlsversion, yearId, stamp, recordId, yearNumber;
     // background image
     ImageView weatherBackground;
     // JSON object that contains weather information
@@ -97,28 +94,24 @@ public class MainActivity extends AppCompatActivity {
         OkHttpClient _client = new OkHttpClient();
 
         HttpUrl.Builder urlBuilder = HttpUrl.parse("https://192.168.0.16/Timestamp/api/DateTimeRecords").newBuilder();
-        urlBuilder.addQueryParameter("v", "1.2");
+
         String url = urlBuilder.build().toString();
 
         Request request = new Request.Builder()
                 .url(url)
                 .build();
 
-        try {
-            Response response = _client.newCall(request).execute();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         //link graphical items to variables
-        temperature = (TextView) findViewById(R.id.temperature);
-        description = (TextView) findViewById(R.id.description);
+        recordId = (TextView) findViewById(R.id.recordId);
+        yearId = (TextView) findViewById(R.id.yearId);
+        stamp = (TextView) findViewById(R.id.stamp);
+        yearNumber = (TextView) findViewById(R.id.yearNumber);
         tlsversion = (TextView) findViewById(R.id.tlsversion);
 
 
         // prepare the loading Dialog
         pDialog = new ProgressDialog(this);
-        pDialog.setMessage("Please wait while retrieving the weather condition ...");
+        pDialog.setMessage("Please wait ...");
         pDialog.setCancelable(false);
 
         // Check if Internet is working
@@ -129,53 +122,62 @@ public class MainActivity extends AppCompatActivity {
 
             pDialog.show();
 
-            // make HTTP request to retrieve the weather
-            JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.GET,
-                    weatherWebserviceURL, null, new Response.Listener<JSONObject>() {
+            try {
+                Response response = _client.newCall(request).execute();
+            } catch (IOException e) {
+                Log.e("Unable to make request", e.getMessage());
+                e.printStackTrace();
+            }
 
-                @Override
-                public void onResponse(JSONObject response) {
-                    try {
-                        // Parsing json object response
-                        // response will be a json object
+//            // make HTTP request to retrieve the weather
+//            JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.GET,
+//                    weatherWebserviceURL, null, new Response.Listener<JSONObject>() {
+//
+//                @Override
+//                public void onResponse(JSONObject response) {
+//                    try {
+//                        // Parsing json object response
+//                        // response will be a json object
+//
+//
+//                        jsonObj = (JSONObject) response.getJSONArray("weather").get(0);
+//                        // display weather description into the "description textview"
+//                        description.setText(jsonObj.getString("description"));
+//                        // display the temperature
+//                        temperature.setText(response.getJSONObject("main").getString("temp") + " °F");
+//                        //display the TLS version used
+//                        //tlsversion.setText(client.)
+//
+//                        // hide the loading Dialog
+//                        pDialog.dismiss();
+//
+//
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                        Toast.makeText(getApplicationContext(), "Error , try again ! ", Toast.LENGTH_LONG).show();
+//                        pDialog.dismiss();
+//
+//                    }
+//
+//
+//                }
+//
+//
+//            }, new Response.ErrorListener() {
+//
+//                @Override
+//                public void onErrorResponse(VolleyError error) {
+//                    VolleyLog.d("tag", "Error: " + error.getMessage());
+//                    Toast.makeText(getApplicationContext(), "Error while loading ... ", Toast.LENGTH_SHORT).show();
+//                    // hide the progress dialog
+//                    pDialog.dismiss();
+//                }
+//            });
 
+//            // Adding request to request queue
+//            AppController.getInstance(this).addToRequestQueue(jsonObjReq);
 
-                        jsonObj = (JSONObject) response.getJSONArray("weather").get(0);
-                        // display weather description into the "description textview"
-                        description.setText(jsonObj.getString("description"));
-                        // display the temperature
-                        temperature.setText(response.getJSONObject("main").getString("temp") + " °F");
-                        //display the TLS version used
-                        //tlsversion.setText(client.)
-
-                        // hide the loading Dialog
-                        pDialog.dismiss();
-
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        Toast.makeText(getApplicationContext(), "Error , try again ! ", Toast.LENGTH_LONG).show();
-                        pDialog.dismiss();
-
-                    }
-
-
-                }
-
-
-            }, new Response.ErrorListener() {
-
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    VolleyLog.d("tag", "Error: " + error.getMessage());
-                    Toast.makeText(getApplicationContext(), "Error while loading ... ", Toast.LENGTH_SHORT).show();
-                    // hide the progress dialog
-                    pDialog.dismiss();
-                }
-            });
-
-            // Adding request to request queue
-            AppController.getInstance(this).addToRequestQueue(jsonObjReq);
+            //AppController.getInstance(this).addToRequestQueue(_client);
         }
     }
 

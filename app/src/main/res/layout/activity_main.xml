@@ -18,35 +18,11 @@
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:text="Newberry"
-                android:textSize="20sp" />
-            <TextView
                 android:id="@+id/tlsversion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:text="TLS 1.X"
-                android:textSize="20sp" />
-            <!--display the temperature-->
-            <TextView
-                android:id="@+id/temperature"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="40dp"
-                android:gravity="center_horizontal"
-                android:text="10 °C"
-                android:textSize="40sp" />
-            <!--display the weather description-->
-            <TextView
-                android:id="@+id/description"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="40dp"
-                android:gravity="center_horizontal"
-                android:text="Clouds"
                 android:textSize="20sp" />
 
             <TextView
