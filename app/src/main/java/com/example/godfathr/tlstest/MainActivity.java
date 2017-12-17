@@ -35,9 +35,6 @@ import okhttp3.TlsVersion;
 
 public class MainActivity extends AppCompatActivity {
 
-    // we"ll make HTTP request to this URL to retrieve weather conditions
-    String weatherWebserviceURL = "https://api.openweathermap.org/data/2.5/weather?q=newberry,us&appid=2156e2dd5b92590ab69c0ae1b2d24586&units=imperial";
-    //String weatherWebserviceURL = "https://192.168.0.16/Timestamp/api/DateTimeRecords";
     //the loading Dialog
     ProgressDialog pDialog;
     // Textview to show data
@@ -91,16 +88,6 @@ public class MainActivity extends AppCompatActivity {
         // link the XML layout to this JAVA class
         setContentView(R.layout.activity_main);
 
-        OkHttpClient _client = new OkHttpClient();
-
-        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://192.168.0.16/Timestamp/api/DateTimeRecords").newBuilder();
-
-        String url = urlBuilder.build().toString();
-
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
-
         //link graphical items to variables
         recordId = (TextView) findViewById(R.id.recordId);
         yearId = (TextView) findViewById(R.id.yearId);
@@ -119,6 +106,15 @@ public class MainActivity extends AppCompatActivity {
             // Show a message to the user to check his Internet
             Toast.makeText(this, "Please check your Internet connection", Toast.LENGTH_LONG).show();
         } else {
+            OkHttpClient _client = new OkHttpClient();
+
+            HttpUrl.Builder urlBuilder = HttpUrl.parse("https://192.168.0.16/Timestamp/api/DateTimeRecords").newBuilder();
+
+            String url = urlBuilder.build().toString();
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .build();
 
             pDialog.show();
 
@@ -128,56 +124,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("Unable to make request", e.getMessage());
                 e.printStackTrace();
             }
-
-//            // make HTTP request to retrieve the weather
-//            JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.GET,
-//                    weatherWebserviceURL, null, new Response.Listener<JSONObject>() {
-//
-//                @Override
-//                public void onResponse(JSONObject response) {
-//                    try {
-//                        // Parsing json object response
-//                        // response will be a json object
-//
-//
-//                        jsonObj = (JSONObject) response.getJSONArray("weather").get(0);
-//                        // display weather description into the "description textview"
-//                        description.setText(jsonObj.getString("description"));
-//                        // display the temperature
-//                        temperature.setText(response.getJSONObject("main").getString("temp") + " °F");
-//                        //display the TLS version used
-//                        //tlsversion.setText(client.)
-//
-//                        // hide the loading Dialog
-//                        pDialog.dismiss();
-//
-//
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                        Toast.makeText(getApplicationContext(), "Error , try again ! ", Toast.LENGTH_LONG).show();
-//                        pDialog.dismiss();
-//
-//                    }
-//
-//
-//                }
-//
-//
-//            }, new Response.ErrorListener() {
-//
-//                @Override
-//                public void onErrorResponse(VolleyError error) {
-//                    VolleyLog.d("tag", "Error: " + error.getMessage());
-//                    Toast.makeText(getApplicationContext(), "Error while loading ... ", Toast.LENGTH_SHORT).show();
-//                    // hide the progress dialog
-//                    pDialog.dismiss();
-//                }
-//            });
-
-//            // Adding request to request queue
-//            AppController.getInstance(this).addToRequestQueue(jsonObjReq);
-
-            //AppController.getInstance(this).addToRequestQueue(_client);
         }
     }
 
