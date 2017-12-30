@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">TLSTest</string>
+    <string name="request_url">https://localhost/Timestamp/api/DateTimeRecords</string>
 </resources>

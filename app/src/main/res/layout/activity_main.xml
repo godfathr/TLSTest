@@ -58,6 +58,13 @@
                 android:text="YearNumber"
                 android:textSize="20sp" />
 
+            <Button
+                android:id="@+id/button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="makeRequest"
+                android:text="LOAD" />
+
         </LinearLayout>
 
     </RelativeLayout>

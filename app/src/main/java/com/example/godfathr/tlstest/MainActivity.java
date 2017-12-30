@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +24,7 @@ import okhttp3.ConnectionSpec;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
 import okhttp3.TlsVersion;
 
 //import com.android.volley.Request;
@@ -103,22 +105,39 @@ public class MainActivity extends AppCompatActivity {
         if (!isNetworkAvailable(this)) {
             // Show a message to the user to check his Internet
             Toast.makeText(this, "Please check your Internet connection", Toast.LENGTH_LONG).show();
-        } else {
-            OkHttpClient _client = new OkHttpClient();
+        }
+        else{
+            new DownloadTimeStamp().execute("@request_url");
+        }
+    }
 
-            HttpUrl.Builder urlBuilder = HttpUrl.parse("https://192.168.0.16/Timestamp/api/DateTimeRecords").newBuilder();
+    ////////////////////make request in the background
+    private static class DownloadTimeStamp extends com.example.godfathr.tlstest.DownloadTimeStamp {
+        @Override
+        protected Response doInBackground(String... strings) {
+            int count = strings.length;
+            //long totalSize = 0;
+            for (int i = 0; i < count; i++) {
+                OkHttpClient _client = new OkHttpClient();
 
-            String url = urlBuilder.build().toString();
+                //HttpUrl.Builder urlBuilder = HttpUrl.parse("https://localhost/Timestamp/api/DateTimeRecords").newBuilder();
+                HttpUrl.Builder urlBuilder = HttpUrl.parse(strings[i].toString()).newBuilder();
 
-            Request request = new Request.Builder()
-                    .url(url)
-                    .build();
+                String url = urlBuilder.build().toString();
 
-            pDialog.show();
-
-            WebServiceFactory wsf = new WebServiceFactory();
-            wsf.MakeRequest(_client, request);
-
+                Request request = new Request.Builder()
+                        .url(url)
+                        .build();
+                try {
+                    Response result = _client.newCall(request).execute();
+                    return result;
+                } catch (IOException e) {
+                    Log.e("Unable to make request", e.getMessage());
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+            return null;
         }
     }
 
