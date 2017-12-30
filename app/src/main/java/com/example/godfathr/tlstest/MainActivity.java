@@ -8,18 +8,24 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import okhttp3.ConnectionSpec;
 import okhttp3.HttpUrl;
@@ -40,48 +46,8 @@ public class MainActivity extends AppCompatActivity {
     ProgressDialog pDialog;
     // Textview to show data
     TextView tlsversion, yearId, stamp, recordId, yearNumber;
-    // background image
-    ImageView weatherBackground;
     // JSON object that contains weather information
     JSONObject jsonObj;
-
-    public static OkHttpClient.Builder enableTls12OnPreLollipop(OkHttpClient.Builder client) {
-        if (Build.VERSION.SDK_INT >= 16 && Build.VERSION.SDK_INT < 22) {
-            try {
-                SSLContext sc = SSLContext.getInstance("TLSv1.2");
-                sc.init(null, null, null);
-                client.sslSocketFactory(new Tls12SocketFactory(sc.getSocketFactory()));
-
-                ConnectionSpec cs = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
-                        .tlsVersions(TlsVersion.TLS_1_2)
-                        .build();
-
-                List<ConnectionSpec> specs = new ArrayList<>();
-                specs.add(cs);
-                //specs.add(ConnectionSpec.COMPATIBLE_TLS);
-                //specs.add(ConnectionSpec.CLEARTEXT);
-
-                client.connectionSpecs(specs);
-            } catch (Exception exc) {
-                Log.e("OkHttpTLSCompat", "Error while setting TLS 1.2", exc);
-            }
-        }
-
-        return client;
-    }
-
-    private OkHttpClient getNewHttpClient() {
-        OkHttpClient.Builder client = new OkHttpClient.Builder()
-                .followRedirects(true)
-                .followSslRedirects(true)
-                .retryOnConnectionFailure(true)
-                .cache(null)
-                .connectTimeout(5, TimeUnit.SECONDS)
-                .writeTimeout(5, TimeUnit.SECONDS)
-                .readTimeout(5, TimeUnit.SECONDS);
-
-        return enableTls12OnPreLollipop(client).build();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +69,82 @@ public class MainActivity extends AppCompatActivity {
         pDialog.setCancelable(false);
     }
 
+    public static OkHttpClient.Builder enableTls12OnPreLollipop(OkHttpClient.Builder client) {
+        if (Build.VERSION.SDK_INT >= 16 && Build.VERSION.SDK_INT < 22) {
+            try {
+                SSLContext sc = SSLContext.getInstance("TLSv1.2");
+                sc.init(null, null, null);
+                client.sslSocketFactory(new Tls12SocketFactory(sc.getSocketFactory()));
+                HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+                // Dummy trust manager that trusts all certificates
+                TrustManager localTrustmanager = new X509TrustManager() {
+
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] chain,
+                                                   String authType) throws CertificateException {
+                    }
+
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] chain,
+                                                   String authType) throws CertificateException {
+                    }
+                };
+
+                // Create SSLContext and set the socket factory as default
+                try {
+                    SSLContext sslc = sc;
+                    sc.init(null, new TrustManager[] { localTrustmanager },
+                            new SecureRandom());
+                    HttpsURLConnection.setDefaultSSLSocketFactory(sc
+                            .getSocketFactory());
+                } catch (KeyManagementException e) {
+                    e.printStackTrace();
+                }
+
+
+
+
+
+
+
+
+                ConnectionSpec cs = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+                        .tlsVersions(TlsVersion.TLS_1_2)
+                        .build();
+
+                List<ConnectionSpec> specs = new ArrayList<>();
+                specs.add(cs);
+                //specs.add(ConnectionSpec.COMPATIBLE_TLS);
+                //specs.add(ConnectionSpec.CLEARTEXT);
+
+                client.connectionSpecs(specs);
+            } catch (Exception exc) {
+                Log.e("OkHttpTLSCompat", "Error while setting TLS 1.2", exc);
+            }
+        }
+
+        return client;
+    }
+
+    private static OkHttpClient getNewHttpClient() {
+        OkHttpClient.Builder client = new OkHttpClient.Builder()
+                .followRedirects(true)
+                .followSslRedirects(true)
+                .retryOnConnectionFailure(true)
+                .cache(null)
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .writeTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS);
+
+        return enableTls12OnPreLollipop(client).build();
+    }
+
     public void makeRequest(View view) {
         // Check if Internet is working
         if (!isNetworkAvailable(this)) {
@@ -121,7 +163,11 @@ public class MainActivity extends AppCompatActivity {
             int count = strings.length;
             //long totalSize = 0;
             for (int i = 0; i < count; i++) {
-                OkHttpClient _client = new OkHttpClient();
+                OkHttpClient _client = getNewHttpClient();
+                Log.e("::::",_client.socketFactory().toString());
+                Log.e("::::",_client.protocols().toString());
+
+
 
                 //HttpUrl.Builder urlBuilder = HttpUrl.parse("https://localhost/Timestamp/api/DateTimeRecords").newBuilder();
                 HttpUrl.Builder urlBuilder = HttpUrl.parse(strings[i].toString()).newBuilder();
