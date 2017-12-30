@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -100,14 +101,16 @@ public class MainActivity extends AppCompatActivity {
         pDialog = new ProgressDialog(this);
         pDialog.setMessage("Please wait ...");
         pDialog.setCancelable(false);
+    }
 
+    public void makeRequest(View view) {
         // Check if Internet is working
         if (!isNetworkAvailable(this)) {
             // Show a message to the user to check his Internet
             Toast.makeText(this, "Please check your Internet connection", Toast.LENGTH_LONG).show();
         }
         else{
-            new DownloadTimeStamp().execute("@request_url");
+            new DownloadTimeStamp().execute("https://192.168.0.16/Timestamp/api/DateTimeRecords");
         }
     }
 
