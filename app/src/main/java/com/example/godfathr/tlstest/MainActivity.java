@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
         return enableTls12OnPreLollipop(client).build();
     }
 
-    public static OkHttpClient.Builder enableTls12OnPreLollipop(OkHttpClient.Builder client) {
+    private static OkHttpClient.Builder enableTls12OnPreLollipop(OkHttpClient.Builder client) {
         if (Build.VERSION.SDK_INT >= 16 && Build.VERSION.SDK_INT < 22) {
             try {
                 SSLContext sc = SSLContext.getInstance("TLSv1.2");
@@ -113,16 +113,16 @@ public class MainActivity extends AppCompatActivity {
 
                 // Create SSLContext and set the socket factory as default
                 try {
-                    SSLContext sslc = sc;
                     sc.init(null, new TrustManager[] { localTrustmanager },
                             new SecureRandom());
                     HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-                    HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
-                        @Override
+                    HostnameVerifier allHostsValid = new HostnameVerifier() {
                         public boolean verify(String hostname, SSLSession session) {
+                            //...
                             return true;
                         }
-                    });
+                    };
+                    HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
                 } catch (KeyManagementException e) {
                     e.printStackTrace();
                 }
@@ -135,8 +135,8 @@ public class MainActivity extends AppCompatActivity {
 
                 List<ConnectionSpec> specs = new ArrayList<>();
                 specs.add(cs);
-                specs.add(ConnectionSpec.COMPATIBLE_TLS);
-                specs.add(ConnectionSpec.CLEARTEXT);
+                //specs.add(ConnectionSpec.COMPATIBLE_TLS); //fallback to TLS 1.0...need to remove this. just playing around with it
+                //specs.add(ConnectionSpec.CLEARTEXT);
                 client.connectionSpecs(specs);
             } catch (Exception exc) {
                 Log.e("OkHttpTLSCompat", "Error while setting TLS 1.2", exc);
@@ -165,12 +165,25 @@ public class MainActivity extends AppCompatActivity {
             //long totalSize = 0;
             for (int i = 0; i < count; i++) {
                 OkHttpClient _client = getNewHttpClient();
+                HostnameVerifier allHostsValid = new HostnameVerifier() {
+                    public boolean verify(String hostname, SSLSession session) {
+                        //...
+                        return true;
+                    }
+                };
+                HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
                 Log.e("::::SockFac",_client.socketFactory().toString());
                 Log.e("::::protocols",_client.protocols().toString());
 
 
+                HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+                    @Override
+                    public boolean verify(String hostname, SSLSession session) {
+                        return true;
+                    }
+                });
 
-                //HttpUrl.Builder urlBuilder = HttpUrl.parse("https://localhost/Timestamp/api/DateTimeRecords").newBuilder();
+
                 HttpUrl.Builder urlBuilder = HttpUrl.parse(strings[i].toString()).newBuilder();
 
                 String url = urlBuilder.build().toString();
