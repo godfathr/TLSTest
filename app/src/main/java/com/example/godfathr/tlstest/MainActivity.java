@@ -22,8 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
@@ -69,6 +71,19 @@ public class MainActivity extends AppCompatActivity {
         pDialog.setCancelable(false);
     }
 
+    private static OkHttpClient getNewHttpClient() {
+        OkHttpClient.Builder client = new OkHttpClient.Builder()
+                .followRedirects(true)
+                .followSslRedirects(true)
+                .retryOnConnectionFailure(true)
+                .cache(null)
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .writeTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS);
+
+        return enableTls12OnPreLollipop(client).build();
+    }
+
     public static OkHttpClient.Builder enableTls12OnPreLollipop(OkHttpClient.Builder client) {
         if (Build.VERSION.SDK_INT >= 16 && Build.VERSION.SDK_INT < 22) {
             try {
@@ -101,17 +116,17 @@ public class MainActivity extends AppCompatActivity {
                     SSLContext sslc = sc;
                     sc.init(null, new TrustManager[] { localTrustmanager },
                             new SecureRandom());
-                    HttpsURLConnection.setDefaultSSLSocketFactory(sc
-                            .getSocketFactory());
+                    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+                    HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+                        @Override
+                        public boolean verify(String hostname, SSLSession session) {
+                            return true;
+                        }
+                    });
                 } catch (KeyManagementException e) {
                     e.printStackTrace();
                 }
-
-
-
-
-
-
+/**************************************************************************************************************/
 
 
                 ConnectionSpec cs = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
@@ -120,9 +135,8 @@ public class MainActivity extends AppCompatActivity {
 
                 List<ConnectionSpec> specs = new ArrayList<>();
                 specs.add(cs);
-                //specs.add(ConnectionSpec.COMPATIBLE_TLS);
-                //specs.add(ConnectionSpec.CLEARTEXT);
-
+                specs.add(ConnectionSpec.COMPATIBLE_TLS);
+                specs.add(ConnectionSpec.CLEARTEXT);
                 client.connectionSpecs(specs);
             } catch (Exception exc) {
                 Log.e("OkHttpTLSCompat", "Error while setting TLS 1.2", exc);
@@ -130,19 +144,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return client;
-    }
-
-    private static OkHttpClient getNewHttpClient() {
-        OkHttpClient.Builder client = new OkHttpClient.Builder()
-                .followRedirects(true)
-                .followSslRedirects(true)
-                .retryOnConnectionFailure(true)
-                .cache(null)
-                .connectTimeout(5, TimeUnit.SECONDS)
-                .writeTimeout(5, TimeUnit.SECONDS)
-                .readTimeout(5, TimeUnit.SECONDS);
-
-        return enableTls12OnPreLollipop(client).build();
     }
 
     public void makeRequest(View view) {
@@ -164,8 +165,8 @@ public class MainActivity extends AppCompatActivity {
             //long totalSize = 0;
             for (int i = 0; i < count; i++) {
                 OkHttpClient _client = getNewHttpClient();
-                Log.e("::::",_client.socketFactory().toString());
-                Log.e("::::",_client.protocols().toString());
+                Log.e("::::SockFac",_client.socketFactory().toString());
+                Log.e("::::protocols",_client.protocols().toString());
 
 
 
@@ -179,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
                         .build();
                 try {
                     Response result = _client.newCall(request).execute();
+                    Log.e(":::Resp", result.toString());
                     return result;
                 } catch (IOException e) {
                     Log.e("Unable to make request", e.getMessage());
