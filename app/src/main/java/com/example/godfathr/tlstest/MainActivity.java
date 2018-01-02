@@ -127,29 +127,6 @@ public class MainActivity extends AppCompatActivity {
                     URL url = new URL(host);
                 } catch (MalformedURLException e) {
                 }
-
-//                try{
-//                    SSLContext sc = SSLContext.getInstance("TLSv1.2");
-//                    sc.init(null, trustAllCerts, new java.security.SecureRandom());
-//                    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-//                }
-
-//                // Create SSLContext and set the socket factory as default
-//                try {
-//                    sc = SSLContext.getInstance("TLSv1.2");
-//                    HttpsURLConnection.setDefaultSSLSocketFactory(new Tls12SocketFactory(sc.getSocketFactory()));
-//                    sc.init(null, new TrustManager[] { localTrustmanager },
-//                            new SecureRandom());
-//                    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-//                    HostnameVerifier allHostsValid = new HostnameVerifier() {
-//                        public boolean verify(String hostname, SSLSession session) {
-//                            return true;
-//                        }
-//                    };
-//                    HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-//                } catch (KeyManagementException e) {
-//                    e.printStackTrace();
-//                }
 /**************************************************************************************************************/
 
 
@@ -204,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
                 HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
                 Log.e("::::SockFac", _client.socketFactory().toString());
                 Log.e("::::protocols", _client.protocols().toString());
-                Log.e("::::ciphers", HttpsURLConnection.getDefaultSSLSocketFactory().getDefaultCipherSuites().toString());
+                //Log.e("::::ciphers", HttpsURLConnection.getDefaultSSLSocketFactory().getDefaultCipherSuites().toString());
 
 
                 HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
