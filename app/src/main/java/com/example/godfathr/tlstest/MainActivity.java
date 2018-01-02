@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 /**************************************************************************************************************/
 
-
+                //https://stackoverflow.com/questions/32425547/okhttp-unable-to-find-acceptable-protocolsandroid 
                 ConnectionSpec cs = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
                         .tlsVersions(TlsVersion.TLS_1_2) //this is where we explicitly set the version of TLS
                         .cipherSuites(
