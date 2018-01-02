@@ -14,9 +14,9 @@ import android.widget.Toast;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +29,7 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import okhttp3.CipherSuite;
 import okhttp3.ConnectionSpec;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -87,50 +88,80 @@ public class MainActivity extends AppCompatActivity {
     private static OkHttpClient.Builder enableTls12OnPreLollipop(OkHttpClient.Builder client) {
         if (Build.VERSION.SDK_INT >= 16 && Build.VERSION.SDK_INT < 22) {
             try {
-                SSLContext sc = SSLContext.getInstance("TLSv1.2");
+                SSLContext sc = SSLContext.getInstance("TLS");
                 sc.init(null, null, null);
                 client.sslSocketFactory(new Tls12SocketFactory(sc.getSocketFactory()));
-                HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+                //HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
 
-                // Dummy trust manager that trusts all certificates
-                TrustManager localTrustmanager = new X509TrustManager() {
 
-                    @Override
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
+                String baseUrl = "https://192.168.0.16/Timestamp/api/DateTimeRecords";
+                // Create a trust manager that does not validate certificate chains
+                TrustManager[] trustAllCerts = new TrustManager[]{
+                        new X509TrustManager() {
+                            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                                return new X509Certificate[0];
+                            }
 
-                    @Override
-                    public void checkServerTrusted(X509Certificate[] chain,
-                                                   String authType) throws CertificateException {
-                    }
+                            public void checkClientTrusted(
+                                    java.security.cert.X509Certificate[] certs, String authType) {
+                            }
 
-                    @Override
-                    public void checkClientTrusted(X509Certificate[] chain,
-                                                   String authType) throws CertificateException {
-                    }
-                };
-
-                // Create SSLContext and set the socket factory as default
-                try {
-                    sc.init(null, new TrustManager[] { localTrustmanager },
-                            new SecureRandom());
-                    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-                    HostnameVerifier allHostsValid = new HostnameVerifier() {
-                        public boolean verify(String hostname, SSLSession session) {
-                            //...
-                            return true;
+                            public void checkServerTrusted(
+                                    java.security.cert.X509Certificate[] certs, String authType) {
+                            }
                         }
-                    };
-                    HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-                } catch (KeyManagementException e) {
-                    e.printStackTrace();
+                };
+                // Install the all-trusting trust manager
+                try {
+                    //SSLContext sc = SSLContext.getInstance("TLS");
+                    sc.init(null, trustAllCerts, new java.security.SecureRandom());
+                    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+                } catch (GeneralSecurityException e) {
                 }
+                // Now we can access an https URL without having the certificate in the truststore
+                try {
+                    String host;
+                    //split the base url and just get the host portion for each possible endpoint
+                    String hostUrl[] = baseUrl.split("16/");
+                    host = hostUrl[0] + "16/";
+                    URL url = new URL(host);
+                } catch (MalformedURLException e) {
+                }
+
+//                try{
+//                    SSLContext sc = SSLContext.getInstance("TLSv1.2");
+//                    sc.init(null, trustAllCerts, new java.security.SecureRandom());
+//                    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+//                }
+
+//                // Create SSLContext and set the socket factory as default
+//                try {
+//                    sc = SSLContext.getInstance("TLSv1.2");
+//                    HttpsURLConnection.setDefaultSSLSocketFactory(new Tls12SocketFactory(sc.getSocketFactory()));
+//                    sc.init(null, new TrustManager[] { localTrustmanager },
+//                            new SecureRandom());
+//                    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+//                    HostnameVerifier allHostsValid = new HostnameVerifier() {
+//                        public boolean verify(String hostname, SSLSession session) {
+//                            return true;
+//                        }
+//                    };
+//                    HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+//                } catch (KeyManagementException e) {
+//                    e.printStackTrace();
+//                }
 /**************************************************************************************************************/
 
 
                 ConnectionSpec cs = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
-                        .tlsVersions(TlsVersion.TLS_1_2)
+                        .tlsVersions(TlsVersion.TLS_1_2) //this is where we explicitly set the version of TLS
+                        .cipherSuites(
+                                CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+                                CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+                                CipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
+                                CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+                                CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+                        )
                         .build();
 
                 List<ConnectionSpec> specs = new ArrayList<>();
@@ -151,8 +182,7 @@ public class MainActivity extends AppCompatActivity {
         if (!isNetworkAvailable(this)) {
             // Show a message to the user to check his Internet
             Toast.makeText(this, "Please check your Internet connection", Toast.LENGTH_LONG).show();
-        }
-        else{
+        } else {
             new DownloadTimeStamp().execute("https://192.168.0.16/Timestamp/api/DateTimeRecords");
         }
     }
@@ -172,8 +202,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                 };
                 HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-                Log.e("::::SockFac",_client.socketFactory().toString());
-                Log.e("::::protocols",_client.protocols().toString());
+                Log.e("::::SockFac", _client.socketFactory().toString());
+                Log.e("::::protocols", _client.protocols().toString());
+                Log.e("::::ciphers", HttpsURLConnection.getDefaultSSLSocketFactory().getDefaultCipherSuites().toString());
 
 
                 HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
